@@ -19,9 +19,9 @@ data <- data %>%
   separate(Height, c('ft', 'inch'), "'", convert = TRUE) %>%
   separate(Work.Rate, c('WR.Attack', 'WR.Defense'), "/ ") %>%
   mutate(Value = parse_number(Value),
-         Wage = parse_number(Value),
-         Release.Clause = parse_number(Value),
-         Weight = parse_number(Value) * 0.453592,  # lbs to kg
+         Wage = parse_number(Wage),
+         Release.Clause = parse_number(Release.Clause),
+         Weight = parse_number(Weight) * 0.453592,  # lbs to kg
          Height = ft*30.48 + inch*2.54
   ) %>%
   mutate_at(vars(LS:RB), funs(parse_number)) %>%
@@ -37,7 +37,6 @@ levels(data$Role) <- c("", "ATT", "DEF", "MID", "ATT", "MID",
             "ATT", "MID", "ATT", "ATT", "DEF", "MID",
             "DEF", "DEF", "MID", "MID", "ATT", "MID",
             "ATT", "ATT", "DEF", "ATT")
-
 
 
 
@@ -72,7 +71,3 @@ par <- oldpar
 
 
 points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8)
-
-
-
-
