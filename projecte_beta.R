@@ -12,7 +12,7 @@ data <- read.csv("fifa.csv")
 
 data <- data %>%
   select(-one_of("X", "ID", "Photo", "Flag", "Club.Logo",
-                 "Real.Face", "Jersey.Number", "Joined",
+                 "Real.Face", "Jersey.Number", "Joined", "Release.Clause",
                  "Loaned.From", "Contract.Valid.Until","Body.Type")) %>%
   filter(complete.cases(data)) %>%
   filter(Position != "GK") %>%
@@ -20,7 +20,6 @@ data <- data %>%
   separate(Work.Rate, c('WR.Attack', 'WR.Defense'), "/ ") %>%
   mutate(Value = parse_number(Value),
          Wage = parse_number(Wage),
-         Release.Clause = parse_number(Release.Clause),
          Weight = parse_number(Weight) * 0.453592,  # lbs to kg
          Height = ft*30.48 + inch*2.54
   ) %>%
@@ -28,7 +27,7 @@ data <- data %>%
   mutate_at(vars(Weak.Foot, Skill.Moves, WR.Attack, WR.Defense,), funs(as.factor)) %>%
   select(-one_of("ft", "inch"))
 
-data <- data[1:1000,]
+data <- data[0:1000,]
 
 
 data$Role <- data$Position
@@ -37,7 +36,7 @@ levels(data$Role) <- c("", "ATT", "DEF", "MID", "ATT", "MID",
             "ATT", "MID", "ATT", "ATT", "DEF", "MID",
             "DEF", "DEF", "MID", "MID", "ATT", "MID",
             "ATT", "ATT", "DEF", "ATT")
-
+data$Position <- NULL
 
 
 # --- data matrix ---
@@ -71,3 +70,4 @@ par <- oldpar
 
 
 points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8)
+
