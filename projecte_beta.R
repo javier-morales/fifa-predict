@@ -27,7 +27,7 @@ data <- data %>%
   mutate_at(vars(Weak.Foot, Skill.Moves, WR.Attack, WR.Defense,), funs(as.factor)) %>%
   select(-one_of("ft", "inch"))
 
-data <- data[0:1000,]
+#data <- data[0:500,]
 
 
 data$Role <- data$Position
@@ -37,6 +37,18 @@ levels(data$Role) <- c("", "ATT", "DEF", "MID", "ATT", "MID",
             "DEF", "DEF", "MID", "MID", "ATT", "MID",
             "ATT", "ATT", "DEF", "ATT")
 data$Position <- NULL
+
+
+# --- resampling data ---
+
+# 1. shuffle data
+data <- data[sample(nrow(data)),]
+
+# 2. split training and test data (20% test data)
+bound <- floor((nrow(data)/5))
+
+test <- data[1:bound,]
+train <- data[(bound+1):nrow(data),]
 
 
 # --- data matrix ---
@@ -55,14 +67,14 @@ screeplot(comp)
 kmeans.3 <- cclust(data.m, centers = 3, method = "kmeans")
 
 
-oldpar <- par(mfrow = c(1, 2))
+par(mfrow = c(1, 2))
 plot(comp$scores[,1], comp$scores[,2], col = kmeans.3$cluster, 
      main = "K-means", xlab = "Comp1", ylab = "Comp2")
 points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8, col = "gold")
 plot(comp$scores[,1], comp$scores[,2], col = data$Role , main = "Role",
      xlab = "Comp1", ylab = "Comp2")
 points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8, col = "gold")
-par <- oldpar
+par(mfrow = c(1, 1))
 
 #COMENTAR LO DEL MIG DEL CAMP QUE SON UNA MESCLA DE ATAC I DEFENSA
 #I QUE EL NOMBRE DE CLUSTERS ES TRES I TAL
@@ -70,4 +82,5 @@ par <- oldpar
 
 
 points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8)
+
 
