@@ -130,3 +130,57 @@ par(mfrow = c(1, 1))
 points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8)
 
 
+#-------------
+#Covariance matrix
+#-------------
+Cov_M <- cov(data.m)
+#Which variables are correlated?
+
+#COMMENT VARIABLES!!!
+
+#
+
+#-------------
+#---- GLM ----
+#-------------
+
+#First approximation to a GLM using Step-Algorithm.
+
+#We use a subset of the train data 
+
+train_sub <- train
+
+train_sub <- sapply(train[,numerical], as.numeric)
+
+train_sub <- as.data.frame(train_sub)
+
+
+First.Model <- glm(Value~.-Overall, data = train_sub, family = gaussian(link = "identity"))
+
+
+summary(First.Model)
+
+plot(First.Model)
+
+
+#The first approximation computes a poor model. 
+
+#Let's try the Step algorithm.
+
+First.Model.AIC <- step(First.Model)
+
+#The model gives a very large AIC, that is, it is overfitted.
+
+#Second Approximation
+
+Sec.model <- glm(Value~.-Overall -ATT -MID -DEF -Special, data=train_sub, family = gaussian(link="identity"))
+summary(Sec.model)
+
+#Remove some variables (Position Puntuation)
+Sec.model <- step(Sec.model)
+
+
+### Let's try to predict the potential
+
+
+
