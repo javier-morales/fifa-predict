@@ -107,6 +107,29 @@ numerical <- !sapply(data, is.factor)
 data.m <- sapply(data[,numerical], as.numeric)
 data.m <- scale(data.m)
 
+
+#-------------------
+# FEATURE SELECTION
+#------------------
+
+# We do the covariance matrix
+
+Cov_M <- cov(data.m)
+
+# We will remove the following variables because they are highly correlated
+# and they are combinations of other variables
+# Special, Overall
+# ATT, MID, DEF
+
+overall <- data$Overall
+
+data$Overall <- NULL
+data$Special <- NULL
+data$ATT <- NULL
+data$MID <- NULL
+data$DEF <- NULL
+
+
 # --------------
 # ---- PCA -----
 # --------------
@@ -129,16 +152,6 @@ par(mfrow = c(1, 1))
 
 points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8)
 
-
-#-------------
-#Covariance matrix
-#-------------
-Cov_M <- cov(data.m)
-#Which variables are correlated?
-
-#COMMENT VARIABLES!!!
-
-#
 
 #-------------
 #---- GLM ----
