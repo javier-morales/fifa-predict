@@ -126,8 +126,8 @@ data <- data[sample(nrow(data)),]
 # 2. split training and test data (20% test data)
 bound <- floor((nrow(data)/5))
 
-test <- data[1:bound,]
-train <- data[(bound+1):nrow(data),]
+test <- data[1:bound,-c(1, 3, 5)]
+train <- data[(bound+1):nrow(data),-c(1, 3, 5)]
 
 
 # --------------
