@@ -16,7 +16,7 @@ data <- read.csv("fifa.csv")
 
 #WATCH OUT WITH X...  !!!!
 data <- data %>%
-  select(-one_of("X...", "ID", "Photo", "Flag", "Club.Logo",
+  select(-one_of("X", "ID", "Photo", "Flag", "Club.Logo",
                  "Real.Face", "Jersey.Number", "Joined", "Release.Clause",
                  "Loaned.From", "Contract.Valid.Until","Body.Type")) %>%
   filter(complete.cases(data)) %>%
@@ -84,20 +84,6 @@ data$DEF <- rowMeans(data[, c("CB", "LB", "LCB","LWB",
 data <- select(data, -(LS:RB)) # We remove them!
 
 
-# -----------------------
-# --- RESAMPLING DATA ---
-# -----------------------
-
-# 1. shuffle data
-data <- data[sample(nrow(data)),]
-
-# 2. split training and test data (20% test data)
-bound <- floor((nrow(data)/5))
-
-test <- data[1:bound,]
-train <- data[(bound+1):nrow(data),]
-
-
 # -------------------
 # --- DATA MATRIX ---
 # -------------------
@@ -128,6 +114,20 @@ data$Special <- NULL
 data$ATT <- NULL
 data$MID <- NULL
 data$DEF <- NULL
+
+
+# -----------------------
+# --- RESAMPLING DATA ---
+# -----------------------
+
+# 1. shuffle data
+data <- data[sample(nrow(data)),]
+
+# 2. split training and test data (20% test data)
+bound <- floor((nrow(data)/5))
+
+test <- data[1:bound,]
+train <- data[(bound+1):nrow(data),]
 
 
 # --------------
