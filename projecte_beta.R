@@ -13,8 +13,10 @@ data <- read.csv("fifa.csv")
 # We first remove useless variables.
 # Goalkeepers (NAs) and their stats are also removed
 
+
+#WATCH OUT WITH X...  !!!!
 data <- data %>%
-  select(-one_of("X", "ID", "Photo", "Flag", "Club.Logo",
+  select(-one_of("X...", "ID", "Photo", "Flag", "Club.Logo",
                  "Real.Face", "Jersey.Number", "Joined", "Release.Clause",
                  "Loaned.From", "Contract.Valid.Until","Body.Type")) %>%
   filter(complete.cases(data)) %>%
@@ -50,21 +52,22 @@ levels(data$Role) <- c("", "ATT", "DEF", "MID", "ATT", "MID",
             "ATT", "ATT", "DEF", "ATT")
 data$Position <- NULL
 
-# We are going to group  all the different habilitiy variables (crossing, dribbling) into
-# more simple groups, according to the dataset source (sofifa.com): Attacking, Skill, 
+# We are going to group  all the different habilitiy variables (shooting, dribbling,...) into
+# more simple groups, according to FIFA 19 game.
+
+#the dataset source (sofifa.com): Attacking, Skill, 
 # Movement, Power, Mentality and Defending.
 
-data$Attacking <- rowMeans(data[,c("Crossing", "Finishing", "HeadingAccuracy",
-                                   "ShortPassing", "Volleys")])
-data$Skill <- rowMeans(data[, c("Dribbling", "Curve", "FKAccuracy",
-                                "LongPassing", "BallControl")])
-data$Movement <- rowMeans(data[,c("Acceleration", "SprintSpeed", "Agility",
-                                  "Reactions", "Balance")])
-data$Power <- rowMeans(data[, c("ShotPower", "Jumping", "Stamina", "Strength",
-                                "LongShots")])
-data$Mentality <- rowMeans(data[, c("Aggression", "Interceptions","Positioning",
-                                    "Vision", "Penalties", "Composure")])
-data$Defending <- rowMeans(data[, c("Marking", "StandingTackle", "SlidingTackle")])
+data$Pace <- rowMeans(data[,c("Acceleration","SprintSpeed")])
+data$Shooting <- rowMeans(data[, c("Positioning", "Finishing", "ShotPower",
+                                   "LongShots", "Volleys","Penalties")])
+data$Passing <- rowMeans(data[,c("Vision", "Crossing", "FKAccuracy",
+                                 "ShortPassing", "LongPassing","Curve")])
+data$Dribbling <- rowMeans(data[, c("Agility", "Balance", "Reactions", "BallControl",
+                                    "Dribbling","Composure")])
+data$Defending <- rowMeans(data[, c("Interceptions", "HeadingAccuracy","Marking",
+                                    "StandingTackle", "SlidingTackle")])
+data$Physicality <- rowMeans(data[, c("Jumping", "Stamina", "Strength","Aggression")])
 
 data <- select(data, -(Crossing:SlidingTackle)) # We remove them!
 
