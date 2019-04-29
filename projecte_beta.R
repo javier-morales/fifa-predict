@@ -284,3 +284,35 @@ legend("topright", c("ATT", "DEF", "MID"), fill = rainbow(3))
 # -
 
 
+k.train <- train
+k.test <- test
+
+k.train$Club <- NULL
+k.test$Club <- NULL
+
+
+# CV
+set.seed(123)
+
+# 2. split training and test data (20% test data)
+bound <- floor((nrow(train)/5))
+
+validation <- train[1:bound,]
+train.cv <- train[(bound+1):nrow(train),]
+
+numerical <- !sapply(validation, is.factor)
+validation.m <- sapply(validation[,numerical], as.numeric)
+numerical <- !sapply(train.cv, is.factor)
+train.cv.m <- sapply(train.cv[,numerical], as.numeric)
+
+kNNs <- vector(mode = "list")
+for (k in c(1,3,5,7,10)) {
+  predicted <- knn(train.cv.m, validation.m, train.cv$Role, k = k)
+  kNNs[k] <- predicted
+}
+
+
+
+
+
+
