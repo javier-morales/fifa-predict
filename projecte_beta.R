@@ -61,6 +61,7 @@ levels(data$Role) <- c("", "ATT", "DEF", "MID", "ATT", "MID",
             "DEF", "DEF", "MID", "MID", "ATT", "MID",
             "ATT", "ATT", "DEF", "ATT")
 data$Position <- NULL
+data$Role <- droplevels(data$Role)
 
 # We are going to group  all the different habilitiy variables (shooting, dribbling,...) into
 # more simple groups, according to FIFA 19 game.
@@ -191,6 +192,7 @@ p.te <- predict(mod.lasso, newx = test.m[,-4], s = "lambda.min")
 # --
 # Lasso predict potential
 # --
+library(glmnet)
 
 x <- train.m[,-3]
 t <- train.m[, 3]
@@ -245,3 +247,23 @@ p.te <- predict(mod.nnet, newx = test.m[,-c(2, 3, 4)])
 (NRMSE.test <- 1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2))
 
 
+
+
+# --------------------------
+# -                        -
+# -     CLASSIFICATION     -
+# -                        -
+# --------------------------
+
+# --------
+# -- LDA -
+# --------
+
+
+mod.lda <- lda(Role ~ . -Club -Nationality -Name -Preferred.Foot -Role, data = train)
+
+summary(mod.lda)
+
+p.te <- predict(mod.lda, newdata = test)
+cm <- table(test$Role, p.te$class)
+sum(diag(cm)) / sum(cm)
