@@ -17,7 +17,7 @@ data <- read.csv("fifa.csv")
 
 #WATCH OUT WITH X...  !!!!
 data <- data %>%
-  select(-one_of("X", "ID", "Photo", "Flag", "Club.Logo",
+  select(-one_of("X...", "ID", "Photo", "Flag", "Club.Logo",
                  "Real.Face", "Jersey.Number", "Joined", "Release.Clause",
                  "Loaned.From", "Contract.Valid.Until","Body.Type")) %>%
   filter(complete.cases(data)) %>%
@@ -183,10 +183,10 @@ p.tr <- predict(mod.lasso, newx = x, s = "lambda.min")
 p.te <- predict(mod.lasso, newx = test.m[,-4], s = "lambda.min")
 
 # R squared gives us an NRMSE of 0.2007968 with the test data
-(NRMSE.train <- 1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2))
+(NRMSE.train <- sqrt(1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2)))
 
 # R squared gives us an NRMSE of 0.1541901 with the test data
-(NRMSE.test <- 1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2))
+(NRMSE.test <- sqrt(1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2)))
 
 
 # --
@@ -205,10 +205,10 @@ p.tr <- predict(mod.lasso, newx = x, s = "lambda.min")
 p.te <- predict(mod.lasso, newx = test.m[,-3], s = "lambda.min")
 
 # R squared gives us an NRMSE of 0.2007968 with the test data
-(NRMSE.train <- 1 - sum((p.tr - mean(train.m[, 3]))^2) / sum((train.m[, 3] - mean(train.m[, 3]))^2))
+(NRMSE.train <- sqrt(1 - sum((p.tr - mean(train.m[, 3]))^2) / sum((train.m[, 3] - mean(train.m[, 3]))^2)))
 
 # R squared gives us an NRMSE of 0.1541901 with the test data
-(NRMSE.test <- 1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2))
+(NRMSE.test <- sqrt(1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2)))
 
 
 
@@ -241,10 +241,10 @@ p.tr <- predict(mod.nnet, newx = x)
 p.te <- predict(mod.nnet, newx = test.m[,-c(2, 3, 4)])
 
 # R squared gives us an NRMSE of 0.17715 with the test data
-(NRMSE.train <- 1 - sum((p.tr - mean(train.m[, 3]))^2) / sum((train.m[, 3] - mean(train.m[, 3]))^2))
+(NRMSE.train <- sqrt(1 - sum((p.tr - mean(train.m[, 3]))^2) / sum((train.m[, 3] - mean(train.m[, 3]))^2)))
 
 # R squared gives us an NRMSE of 0.17715 with the test data
-(NRMSE.test <- 1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2))
+(NRMSE.test <- sqrt(1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2)))
 
 
 
