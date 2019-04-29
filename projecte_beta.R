@@ -2,6 +2,7 @@ library(dplyr)
 library(tidyr)
 library(readr)
 library(cclust)
+library(stringr)
 
 data <- read.csv("fifa.csv")
 
@@ -25,6 +26,9 @@ data <- data %>%
 
 # Next we change units, parse numbers and separate variables that merged
 
+data$M.value <- sapply(data$Value, str_sub, start=-1) == 'M'
+data$M.wage <- sapply(data$Wage, str_sub, start=-1) == 'M'
+
 data <- data %>%
   separate(Height, c('ft', 'inch'), "'", convert = TRUE) %>%
   separate(Work.Rate, c('WR.Attack', 'WR.Defense'), "/ ") %>%
@@ -35,7 +39,13 @@ data <- data %>%
   ) %>%
   select(-one_of("ft", "inch")) %>%
   mutate_at(vars(LS:RB), parse_number) %>%
-  mutate_at(vars(Weak.Foot, Skill.Moves, WR.Attack, WR.Defense), factor, ordered = TRUE)
+  mutate_at(vars(Weak.Foot, Skill.Moves), parse_number) %>%
+  mutate_at(vars(WR.Attack, WR.Defense), factor, ordered = TRUE)
+
+data$Wage <- ifelse(data$M.wage, data$Wage * 1000000, data$Wage * 1000)
+data$Value <- ifelse(data$M.value, data$Value * 1000000, data$Value * 1000)
+data$M.value <- NULL
+data$M.wage <- NULL
 
 levels(data$WR.Attack) <- c("Low", "Medium", "High")  # Correct order
 levels(data$WR.Defense) <- c("Low", "Medium", "High")
@@ -84,16 +94,6 @@ data$DEF <- rowMeans(data[, c("CB", "LB", "LCB","LWB",
 data <- select(data, -(LS:RB)) # We remove them!
 
 
-# -------------------
-# --- DATA MATRIX ---
-# -------------------
-
-numerical <- !sapply(data, is.factor)
-
-data.m <- sapply(data[,numerical], as.numeric)
-data.m <- scale(data.m)
-
-
 #-------------------
 # FEATURE SELECTION
 #------------------
@@ -109,7 +109,6 @@ Cov_M <- cov(data.m)
 
 overall <- data$Overall
 
-data$Overall <- NULL
 data$Special <- NULL
 data$ATT <- NULL
 data$MID <- NULL
@@ -120,21 +119,37 @@ data$DEF <- NULL
 # --- RESAMPLING DATA ---
 # -----------------------
 
+
+set.seed(123)
 # 1. shuffle data
-data <- data[sample(nrow(data)),]
+data.2 <- data[sample(nrow(data)),]
 
 # 2. split training and test data (20% test data)
 bound <- floor((nrow(data)/5))
 
-test <- data[1:bound,-c(1, 3, 5)]
-train <- data[(bound+1):nrow(data),-c(1, 3, 5)]
+test <- data.2[1:bound,]
+train <- data.2[(bound+1):nrow(data),]
+
+
+# -------------------
+# --- DATA MATRIX ---
+# -------------------
+
+numerical <- !sapply(data, is.factor)
+data.m <- sapply(data[,numerical], as.numeric)
+
+numerical <- !sapply(train, is.factor)
+train.m <- sapply(train[,numerical], as.numeric)
+
+numerical <- !sapply(test, is.factor)
+test.m <- sapply(test[,numerical], as.numeric)
 
 
 # --------------
 # ---- PCA -----
 # --------------
 
-comp <- princomp(data.m)
+comp <- princomp(scale(data.m))
 screeplot(comp)
 
 
@@ -144,56 +159,89 @@ kmeans.3 <- cclust(data.m, centers = 3, method = "kmeans")
 par(mfrow = c(1, 2))
 plot(comp$scores[,1], comp$scores[,2], col = kmeans.3$cluster, 
      main = "K-means", xlab = "Comp1", ylab = "Comp2")
-points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8, col = "gold")
-plot(comp$scores[,1], comp$scores[,2], col = cut(data$Overall, breaks = 3) , main = "Role",
+plot(comp$scores[,1], comp$scores[,2], col = data$Role, main = "Role",
      xlab = "Comp1", ylab = "Comp2")
-points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8, col = "gold")
 par(mfrow = c(1, 1))
 
-points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8)
 
 
-#-------------
-#---- GLM ----
-#-------------
+# --------------
+# -- LASSO -----
+# --------------
+library(glmnet)
 
-#First approximation to a GLM using Step-Algorithm.
+# Train model to predict value
+x <- train.m[,-4]
+t <- train.m[, 4]
 
-#We use a subset of the train data 
+mod.lasso <- cv.glmnet(x, t, nfolds = 10)
 
-train_sub <- train
+coef(mod.lasso)
 
-train_sub <- sapply(train[,numerical], as.numeric)
+p.tr <- predict(mod.lasso, newx = x, s = "lambda.min")
+p.te <- predict(mod.lasso, newx = test.m[,-4], s = "lambda.min")
 
-train_sub <- as.data.frame(train_sub)
+# R squared gives us an NRMSE of 0.2007968 with the test data
+(NRMSE.train <- 1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2))
 
-
-First.Model <- glm(Value~.-Overall, data = train_sub, family = gaussian(link = "identity"))
-
-
-summary(First.Model)
-
-plot(First.Model)
-
-
-#The first approximation computes a poor model. 
-
-#Let's try the Step algorithm.
-
-First.Model.AIC <- step(First.Model)
-
-#The model gives a very large AIC, that is, it is overfitted.
-
-#Second Approximation
-
-Sec.model <- glm(Value~.-Overall -ATT -MID -DEF -Special, data=train_sub, family = gaussian(link="identity"))
-summary(Sec.model)
-
-#Remove some variables (Position Puntuation)
-Sec.model <- step(Sec.model)
+# R squared gives us an NRMSE of 0.1541901 with the test data
+(NRMSE.test <- 1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2))
 
 
-### Let's try to predict the potential
+# --
+# Lasso predict potential
+# --
 
+x <- train.m[,-3]
+t <- train.m[, 3]
+
+mod.lasso <- cv.glmnet(x, t, nfolds = 10)
+
+coef(mod.lasso)
+
+p.tr <- predict(mod.lasso, newx = x, s = "lambda.min")
+p.te <- predict(mod.lasso, newx = test.m[,-3], s = "lambda.min")
+
+# R squared gives us an NRMSE of 0.2007968 with the test data
+(NRMSE.train <- 1 - sum((p.tr - mean(train.m[, 3]))^2) / sum((train.m[, 3] - mean(train.m[, 3]))^2))
+
+# R squared gives us an NRMSE of 0.1541901 with the test data
+(NRMSE.test <- 1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2))
+
+
+
+# --------------
+# -- RIDGE -----
+# --------------
+
+library(MASS)
+
+mod.ridge <- lm.ridge(Value ~ . -Club -Nationality -Name -Preferred.Foot -Role, data = train, lambda = seq(0,5,0.5))
+
+coef(mod.ridge)
+
+
+# Generalized Cross Validation plot
+plot(seq(0,5,0.5), mod.ridge$GCV, type  ="l")
+abline(v = seq(0,5,0.5)[which.min(mod.ridge$GCV)], lty = 2)
+
+# -----------
+# Neural NET-
+# -----------
+library(nnet)
+
+x <- train.m[,-3]
+t <- train.m[, 3]
+
+mod.nnet <- nnet(Value ~ ., data = scale(data.m), subset = bound, size = 10, linout = T)
+
+p.tr <- predict(mod.nnet, newx = x)
+p.te <- predict(mod.nnet, newx = test.m[,-c(2, 3, 4)])
+
+# R squared gives us an NRMSE of 0.17715 with the test data
+(NRMSE.train <- 1 - sum((p.tr - mean(train.m[, 3]))^2) / sum((train.m[, 3] - mean(train.m[, 3]))^2))
+
+# R squared gives us an NRMSE of 0.17715 with the test data
+(NRMSE.test <- 1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2))
 
 
