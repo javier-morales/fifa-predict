@@ -282,7 +282,7 @@ legend("topright", c("ATT", "DEF", "MID"), fill = rainbow(3))
 # --------
 # - KNN
 # -
-
+library(class)
 
 k.train <- train
 k.test <- test
@@ -300,18 +300,71 @@ bound <- floor((nrow(train)/5))
 validation <- train[1:bound,]
 train.cv <- train[(bound+1):nrow(train),]
 
+
 numerical <- !sapply(validation, is.factor)
 validation.m <- sapply(validation[,numerical], as.numeric)
 numerical <- !sapply(train.cv, is.factor)
 train.cv.m <- sapply(train.cv[,numerical], as.numeric)
 
-kNNs <- vector(mode = "list")
-for (k in c(1,3,5,7,10)) {
-  predicted <- knn(train.cv.m, validation.m, train.cv$Role, k = k)
-  kNNs[k] <- predicted
+#kNN.e <- rep(NA,5)
+e <- vector(mode = "numeric", length = 5)
+
+
+#The value of error vs. k is an oscillation, so it depends in every relization, see some plots for different k's.
+keys <- seq(1,10,1)
+
+for (i in keys) {
+  predicted <- knn(train.cv.m, validation.m, train.cv$Role, k = i)
+  CM <- table(predicted, validation$Role)*100
+  e[i] <- sum(diag(CM))/sum(CM)
 }
 
+plot(keys, e, type = 'l', xlab = "k", ylab="% of success", main = "% of success")
 
+(Errors <- data.frame(keys,e))
+
+
+
+#SOME PLOTS
+
+nicecolors <- c('black','red','blue')
+grid.size <- 20000
+XLIM <- range(train.cv.m[,1])
+grid.x <- seq(XLIM[1], XLIM[2], len=grid.size)
+
+YLIM <- range(train.cv.m[,2])
+grid.y <- seq(YLIM[1], YLIM[2], len=grid.size)
+
+#PCA for Train data
+train.cv.PCA <- princomp(scale(train.cv.m))
+train.cv.R2 <- cbind(train.cv.PCA$scores[,1], train.cv.PCA$scores[,2])
+
+#PCA for Validation data
+validation.cv.PCA <- princomp(scale(validation.m))
+validation.R2 <- cbind(validation.cv.PCA$scores[,1], validation.cv.PCA$scores[,2])
+
+############
+## TRY TO DO THE PCA FOR THE COMPLETE DATA AND THEN SEPARATE IT BETWEEN TRAIN AND VALIDATION
+
+
+visualize.1NN <- function ()
+{
+  par(mfrow=c(1,1))
+  
+  predicted <- knn (train.cv.m, validation.m, train.cv$Role, k=1)
+  
+  # These are the predictions
+  plot(train.cv.R2, xlab="X1", ylab="X2", type="n")
+  points(validation.R2, col=nicecolors[as.numeric(predicted)], pch=16)
+  #contour(grid.x, grid.y, matrix(as.numeric(predicted),grid.size,grid.size), 
+         # levels=c(1,2,3), add=TRUE, drawlabels=FALSE)
+  #NO EXECUTIS CONTOUR!!! PETA EL PC.
+  # Add training points, for reference
+  #points(train.cv.R2, col=rainbow(3), pch=4)
+  title("1-NN classification")
+}
+
+visualize.1NN ()
 
 
 
