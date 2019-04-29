@@ -259,11 +259,28 @@ p.te <- predict(mod.nnet, newx = test.m[,-c(2, 3, 4)])
 # -- LDA -
 # --------
 
-
-mod.lda <- lda(Role ~ . -Club -Nationality -Name -Preferred.Foot -Role, data = train)
+data.lda <- data[,-match(c("Club", "Nationality", "Name", "Preferred.Foot", "WR.Attack", "WR.Defense"), colnames(data))]
+  
+mod.lda <- lda(Role ~ ., data = data.lda)
 
 summary(mod.lda)
 
 p.te <- predict(mod.lda, newdata = test)
 cm <- table(test$Role, p.te$class)
 sum(diag(cm)) / sum(cm)
+
+
+# Plot lda (tipus PCA)
+data.lda <- data.lda[,-match(c("Role"), colnames(data.lda))]
+loadings <- as.matrix(data.lda) %*% as.matrix(mod.lda$scaling)
+
+plot(loadings[,1], loadings[,2], type="n", xlab="LD1", ylab="LD2")
+points(loadings[,1], loadings[,2], pch = 4, col = rainbow(3)[unclass(data$Role)])
+legend("topright", c("ATT", "DEF", "MID"), fill = rainbow(3))
+
+
+# --------
+# - KNN
+# -
+
+
