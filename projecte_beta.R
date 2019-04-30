@@ -173,6 +173,9 @@ text(comp$scores[16120:16122,1], comp$scores[16120:16122,2], labels = data$Name[
 par(mfrow = c(1, 1))
 
 
+##CALINSKI - HARABASZ
+
+
 
 #Boxplots
 par(mfrow=c(2,3))
@@ -294,7 +297,7 @@ coef(model.ridge)
 
 
 # Generalized Cross Validation plot
-plot(seq(0,10,0.1), model.ridge$GCV, type  ="l", main = "GCV", xlab="Lambda",ylab="GCV")
+plot(seq(0,10,0.1), model.ridge$GCV, type  ="l", main = "GCV", xlab=expression(lambda),ylab="GCV")
 abline(v = seq(0,10,0.1)[which.min(model.ridge$GCV)], lty = 2)
 
 #####FINAL MODEL WITH LAMBDA######
@@ -536,8 +539,8 @@ plot(seq(0,10,0.1), model.ridge$GCV, main="GCV of Ridge Regression", type="l",
      xlab=expression(lambda), ylab="GCV")
 
 # The optimal lambda is given by
-# (lambda.ridge <- seq(0,10,0.1)[which.min(model.ridge$GCV)])
-#abline (v=lambda.ridge,lty=2)
+ (lambda.ridge <- seq(0,10,0.1)[which.min(model.ridge$GCV)])
+abline (v=lambda.ridge,lty=2)
 
 # We can plot the coefficients and see how they vary as a function of lambda:
 #colors <- rainbow(12)
@@ -556,4 +559,10 @@ model.ridgereg.FINAL <- lm.ridge(lpsa ~ ., data=train, lambda = lambda.ridge)
 
 model.ridge.Final <- lm.ridge(Potential~Age+Overall+Value+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
                               + Dribbles + Defending+ Physicality, data = train, lambda = lambda.ridge )
+
+
+
+
+
+
 
