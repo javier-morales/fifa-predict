@@ -108,7 +108,7 @@ Cov_M <- cov(data.m)
 # Special, Overall
 # ATT, MID, DEF
 
-overall <- data$Overall
+#overall <- data$Overall
 
 data$Special <- NULL
 data$ATT <- NULL
@@ -198,21 +198,38 @@ p.te <- predict(mod.lasso, newx = test.m[,-4], s = "lambda.min")
 (NRMSE.test <- (1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2)))
 
 
-#-----------------
-#-------GLM - Poisson--------
-#-----------------
+
+#--------------------------------
+#-------GLM - Poisson------------
+#--------------------------------
 
 glm.mod <- glm(Value~Age+Overall+Potential+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
                + Dribbles + Defending+ Physicality, data = train, family = poisson)
 
-p.tr <- predict(glm.mod)
+p.tr <- predict(glm.mod, type = 'response')
 p.te <- predict(glm.mod, newx = test)
 
 # R squared gives us an NRMSE of 0.2007968 with the test data
-(NRMSE.train <- (1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2)))
+(NRMSE.train <- 1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2))
 
 # R squared gives us an NRMSE of 0.1541901 with the test data
-(NRMSE.test <- (1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2)))
+(NRMSE.test <- 1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2))
+
+
+#-----------
+#----LM-----
+#-----------
+
+library(caret)
+K <- 10; TIMES <- 10
+trc <- trainControl (method="repeatedcv", number=K, repeats=TIMES)
+
+# STANDARD REGRESSION
+model.std.10x10CV <- train (Value~Age+Overall+Potential+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
+                            + Dribbles + Defending+ Physicality , data = train, trControl=trc, method='lm')
+
+normalization.train <- (length(train$Value)-1)*var(train$Value)
+(NMSE.std.train <- crossprod(predict (model.std.10x10CV) - train$Value) / normalization.train)
 
 # --
 # Lasso predict potential
