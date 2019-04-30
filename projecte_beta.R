@@ -175,6 +175,23 @@ par(mfrow = c(1, 1))
 
 ##CALINSKI - HARABASZ
 
+data.k <- data.m[1:2500,]
+
+do.kmeans <- function (whatK)
+{
+  r <- cclust (data.k,whatK,iter.max=100,method="kmeans",dist="euclidean")
+  (clustIndex(r,data.k, index="calinski"))
+}
+
+max (replicate (100, do.kmeans(5)))
+
+# So it is not a matter of wrong initialization, this is really the best 5-means can do here
+
+res <- rep(NA,10)
+for (K in 2:10){
+  res[K] <- max (replicate (100, do.kmeans(K)))
+}
+plot(res, type="l")
 
 
 #Boxplots
