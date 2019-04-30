@@ -181,8 +181,22 @@ for (i in vars) {
   boxplot(data[,i]~data$Role, main = colnames(data)[i], col = c(2,3,4))
 }
 
+#transformation for the Value?
+par(mfrow=c(1,2))
+
+eps <- 100
+boxplot(data$Value, main = "Value")
+boxplot(log(data$Value+eps), main = "Log-Value")
+
+boxplot(data$Value~data$Role, main = "Value")
+boxplot(log(data$Value)~data$Role, main = "Log-Value", col = c(2,3,4))
+
 par(mfrow=c(1,1))
 
+
+##Value transformated
+eps <- 10
+Value.trans <- log(data$Value+eps)
 
 library(ggplot2)
 
@@ -199,11 +213,11 @@ boxplot(data$Value, main = "Value")
 #----DATA VISUALIZATION II--#
 #-----------------
 
-library(graphics)
-Star.var <- data.m[,11:16]
-Star.Best <- data.m[1:5,11:16]
+#library(graphics)
+#Star.var <- data.m[,11:16]
+#Star.Best <- data.m[1:5,11:16]
 
-stars(Star.Best, scale = T)
+#stars(Star.Best, scale = T)
 
 
 
@@ -220,8 +234,8 @@ mod.lasso <- cv.glmnet(x, t, nfolds = 10)
 
 coef(mod.lasso)
 
-p.tr <- predict(mod.lasso, newx = x, s = "lambda.min")
-p.te <- predict(mod.lasso, newx = test.m[,-4], s = "lambda.min")
+p.tr <- (predict(mod.lasso, newx = x, s = "lambda.min"))
+p.te <- (predict(mod.lasso, newx = test.m[,-4], s = "lambda.min"))
 
 # R squared gives us an NRMSE of 0.2007968 with the test data
 (NRMSE.train <- (1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2)))
@@ -239,13 +253,15 @@ glm.mod <- glm(Value~Age+Overall+Potential+Wage+International.Reputation+Skill.M
                + Dribbles + Defending+ Physicality, data = train, family = poisson)
 
 p.tr <- predict(glm.mod, type = 'response')
-p.te <- predict(glm.mod, newx = test)
+p.te <- predict(glm.mod, newx = test, type = 'response')
 
 # R squared gives us an NRMSE of 0.2007968 with the test data
 (NRMSE.train <- 1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2))
 
 # R squared gives us an NRMSE of 0.1541901 with the test data
 (NRMSE.test <- 1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2))
+
+
 
 
 #-----------
@@ -271,14 +287,28 @@ normalization.train <- (length(train$Value)-1)*var(train$Value)
 
 library(MASS)
 
-mod.ridge <- lm.ridge(Value ~ . -Club -Nationality -Name -Preferred.Foot -Role, data = train, lambda = seq(0,5,0.5))
+model.ridge <- lm.ridge(Value~Age+Overall+Potential+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
+                      + Dribbles + Defending+ Physicality, data = train, lambda = seq(0,10,0.1))
 
-coef(mod.ridge)
+coef(model.ridge)
 
 
 # Generalized Cross Validation plot
-plot(seq(0,5,0.5), mod.ridge$GCV, type  ="l")
-abline(v = seq(0,5,0.5)[which.min(mod.ridge$GCV)], lty = 2)
+plot(seq(0,10,0.1), model.ridge$GCV, type  ="l", main = "GCV", xlab="Lambda",ylab="GCV")
+abline(v = seq(0,10,0.1)[which.min(model.ridge$GCV)], lty = 2)
+
+#####FINAL MODEL WITH LAMBDA######
+
+(lambda.ridge <- seq(0,10,0.1)[which.min(model.ridge$GCV)])
+
+##PLOTS FOR RIDGE REGRESSION##
+
+abline (v=lambda.ridge,lty=2)
+
+#THE FINAL MODEL
+
+ridge.final <- lm.ridge(Value~Age+Overall+Potential+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
+                        + Dribbles + Defending+ Physicality, data = train, lambda = lambda.ridge)
 
 # -----------
 # Neural NET-
@@ -487,4 +517,43 @@ plot(coef(mod.lasso))
 
 
 
+#############
+####Ridge####
+#############
+
+model.ridge <- lm.ridge(Potential~Age+Overall+Value+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
+                      + Dribbles + Defending+ Physicality, data = train, lambda = seq(0,10,0.1))
+
+coef(model.ridge)
+
+
+# Generalized Cross Validation plot
+#plot(seq(0,5,0.5), mod.ridge$GCV, type  ="l", main = "GCV", xlab="Lambda",ylab="GCV")
+#abline(v = seq(0,5,0.5)[which.min(mod.ridge$GCV)], lty = 2)
+
+
+plot(seq(0,10,0.1), model.ridge$GCV, main="GCV of Ridge Regression", type="l", 
+     xlab=expression(lambda), ylab="GCV")
+
+# The optimal lambda is given by
+# (lambda.ridge <- seq(0,10,0.1)[which.min(model.ridge$GCV)])
+#abline (v=lambda.ridge,lty=2)
+
+# We can plot the coefficients and see how they vary as a function of lambda:
+#colors <- rainbow(12)
+
+#matplot (seq(0,10,0.1), coef(model.ridge)[,-1], type="l",xlab=expression(lambda), 
+ #        ylab=expression(hat(beta)), col=colors, lty=1, lwd=2, main="Ridge coefficients")
+#abline (v=lambda.ridge, lty=2)
+#abline (h=0, lty=2)
+#arrows (5.5,0.45,5,0.35, length = 0.15)
+#text (rep(10, 9), coef(model.ridge)[length(seq(0,10,0.1)),-1], colnames(train)[-9], pos=4, col=colors)
+#text(5.5, 0.4, adj=c(0,-1), "best lambda", col="black", cex=0.75)
+
+## So we refit our final ridge regression model using the best lambda:
+model.ridgereg.FINAL <- lm.ridge(lpsa ~ ., data=train, lambda = lambda.ridge)
+(beta.ridgereg.FINAL <- coef(model.ridgereg.FINAL))
+
+model.ridge.Final <- lm.ridge(Potential~Age+Overall+Value+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
+                              + Dribbles + Defending+ Physicality, data = train, lambda = lambda.ridge )
 
