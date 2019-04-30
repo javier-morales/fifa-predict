@@ -101,7 +101,7 @@ data <- select(data, -(LS:RB)) # We remove them!
 
 # We do the covariance matrix
 
-Cov_M <- cov(data.m)
+#Cov_M <- cov(data.m)
 
 # We will remove the following variables because they are highly correlated
 # and they are combinations of other variables
@@ -160,11 +160,41 @@ kmeans.3 <- cclust(data.m, centers = 3, method = "kmeans")
 par(mfrow = c(1, 2))
 plot(comp$scores[,1], comp$scores[,2], col = kmeans.3$cluster, 
      main = "K-means", xlab = "Comp1", ylab = "Comp2")
+points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8, col = 'Yellow')
+text(comp$scores[1:3,1], comp$scores[1:3,2], labels = data$Name[1:3])
+text(comp$scores[16120:16122,1], comp$scores[16120:16122,2], labels = data$Name[16120:16122], col = "Blue")
+#text(comp$scores[c(234,237),1], comp$scores[c(234,237),2], labels = data$Name[c(234,237)], col = "Blue")
 plot(comp$scores[,1], comp$scores[,2], col = data$Role, main = "Role",
      xlab = "Comp1", ylab = "Comp2")
+points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8, col = 'Yellow')
+text(comp$scores[1:3,1], comp$scores[1:3,2], labels = data$Name[1:3])
+text(comp$scores[16120:16122,1], comp$scores[16120:16122,2], labels = data$Name[16120:16122], col = "Blue")
+#text(comp$scores[c(234,237),1], comp$scores[c(234,237),2], labels = data$Name[c(234,237)], col = "Blue")
 par(mfrow = c(1, 1))
 
 
+
+#Boxplots
+par(mfrow=c(2,3))
+vars <- c(18,19,20,21,22,23)
+for (i in vars) {
+  boxplot(data[,i]~data$Role, main = colnames(data)[i], col = c(2,3,4))
+}
+
+par(mfrow=c(1,1))
+
+
+library(ggplot2)
+
+plot(data$Nationality)
+plot(data$Club)
+
+plot(data$Preferred.Foot~data$Role, main = "Preferred Foot vS Role", xlab = "Role", ylab = "Preferred Foot")
+
+par(mfrow=c(1,3))
+boxplot(data$Overall, main = "Overall")
+boxplot(data$Potential, main = "Potential")
+boxplot(data$Value, main = "Value")
 #-----------------
 #----DATA VISUALIZATION II--#
 #-----------------
@@ -174,6 +204,8 @@ Star.var <- data.m[,11:16]
 Star.Best <- data.m[1:5,11:16]
 
 stars(Star.Best, scale = T)
+
+
 
 # --------------
 # -- LASSO -----
