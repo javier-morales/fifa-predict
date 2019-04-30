@@ -427,6 +427,10 @@ plot(keys, e, type = 'l', xlab = "k", ylab="% of success", main = "% of success"
 (Errors <- data.frame(keys,e))
 
 
+final.knn <- knn(train.cv.m, validation.m, train.cv$Role, k = 1)
+
+cm <- table(validation$Role,as.vector(final.knn))
+sum(diag(cm)) / sum(cm)
 
 #SOME PLOTS
 
