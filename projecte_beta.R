@@ -74,7 +74,7 @@ data$Shooting <- rowMeans(data[, c("Positioning", "Finishing", "ShotPower",
                                    "LongShots", "Volleys","Penalties")])
 data$Passing <- rowMeans(data[,c("Vision", "Crossing", "FKAccuracy",
                                  "ShortPassing", "LongPassing","Curve")])
-data$Dribbling <- rowMeans(data[, c("Agility", "Balance", "Reactions", "BallControl",
+data$Dribbles <- rowMeans(data[, c("Agility", "Balance", "Reactions", "BallControl",
                                     "Dribbling","Composure")])
 data$Defending <- rowMeans(data[, c("Interceptions", "HeadingAccuracy","Marking",
                                     "StandingTackle", "SlidingTackle")])
@@ -165,6 +165,11 @@ plot(comp$scores[,1], comp$scores[,2], col = data$Role, main = "Role",
 par(mfrow = c(1, 1))
 
 
+#-----------------
+#----DATA VISUALIZATION II--#
+#-----------------
+
+Star.var <- data.m[,11:16]
 
 # --------------
 # -- LASSO -----
