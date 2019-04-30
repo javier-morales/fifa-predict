@@ -263,27 +263,6 @@ model.std.10x10CV <- train (Value~Age+Overall+Potential+Wage+International.Reput
 normalization.train <- (length(train$Value)-1)*var(train$Value)
 (NMSE.std.train <- crossprod(predict (model.std.10x10CV) - train$Value) / normalization.train)
 
-# --
-# Lasso predict potential
-# --
-library(glmnet)
-
-x <- train.m[,-3]
-t <- train.m[, 3]
-
-mod.lasso <- cv.glmnet(x, t, nfolds = 10)
-
-coef(mod.lasso)
-
-p.tr <- predict(mod.lasso, newx = x, s = "lambda.min")
-p.te <- predict(mod.lasso, newx = test.m[,-3], s = "lambda.min")
-
-# R squared gives us an NRMSE of 0.2007968 with the test data
-(NRMSE.train <- sqrt(1 - sum((p.tr - mean(train.m[, 3]))^2) / sum((train.m[, 3] - mean(train.m[, 3]))^2)))
-
-# R squared gives us an NRMSE of 0.1541901 with the test data
-(NRMSE.test <- sqrt(1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2)))
-
 
 
 # --------------
@@ -439,6 +418,72 @@ visualize.1NN <- function ()
 }
 
 visualize.1NN ()
+
+
+############################################
+############################################
+#-MODELS FOR POTENTIAL-#####################
+############################################
+############################################
+
+
+#############
+###-LASSO-###
+#############
+# --
+# Lasso predict potential
+# --
+#library(glmnet)
+
+x <- train.m[,-3]
+t <- train.m[, 3]
+
+mod.lasso <- cv.glmnet(x, t, nfolds = 10)
+
+coef(mod.lasso)
+
+p.tr <- predict(mod.lasso, newx = x, s = "lambda.min")
+p.te <- predict(mod.lasso, newx = test.m[,-3], s = "lambda.min")
+
+# R squared gives us an NRMSE of 0.2007968 with the test data
+(NRMSE.train <- (1 - sum((p.tr - mean(train.m[, 3]))^2) / sum((train.m[, 3] - mean(train.m[, 3]))^2)))
+
+# R squared gives us an NRMSE of 0.1541901 with the test data
+(NRMSE.test <- (1 - sum((p.te - mean(test.m[, 3]))^2) / sum((test.m[, 3] - mean(test.m[, 3]))^2)))
+
+#16 % on training error
+#15 % on testing error
+
+
+##########
+###-LM-###
+##########
+K <- 10; TIMES <- 10
+trc <- trainControl (method="repeatedcv", number=K, repeats=TIMES)
+
+# STANDARD REGRESSION
+model.std.10x10CV <- train (Potential~Value+Age+Overall+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
+                            + Dribbles + Defending+ Physicality , data = train, trControl=trc, method='lm')
+
+normalization.train <- (length(train$Potential)-1)*var(train$Potential)
+(NMSE.std.train <- crossprod(predict (model.std.10x10CV) - train$Potential) / normalization.train)
+
+(NMSE.std.train)^2
+
+#TRAIN error of 16,19 % or 2,6 %
+
+##### LINEAR MODEL USING NON-ZERO PARAMETRES OF LASSO
+
+lm.pot <- lm(Potential~Age+Overall+International.Reputation + Weight + Pace + Physicality, data = train)
+summary(lm.pot)
+
+#R-squared of 83,73 %
+#Almost the same training error but with less variables
+
+plot(mod.lasso)
+
+par(mfrow = c(1,1))
+plot(coef(mod.lasso))
 
 
 
