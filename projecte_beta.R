@@ -17,7 +17,7 @@ data <- read.csv("fifa.csv")
 
 #WATCH OUT WITH X...  !!!!
 data <- data %>%
-  select(-one_of("X...", "ID", "Photo", "Flag", "Club.Logo",
+  select(-one_of("X", "ID", "Photo", "Flag", "Club.Logo",
                  "Real.Face", "Jersey.Number", "Joined", "Release.Clause",
                  "Loaned.From", "Contract.Valid.Until","Body.Type")) %>%
   filter(complete.cases(data)) %>%
@@ -154,7 +154,7 @@ comp <- princomp(scale(data.m))
 screeplot(comp)
 
 
-kmeans.3 <- cclust(data.m, centers = 3, method = "kmeans")
+kmeans.3 <- cclust(data.m[,c(1,2,3,4)], centers = 3, method = "kmeans")
 
 
 par(mfrow = c(1, 2))
@@ -164,7 +164,7 @@ points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8, col = 'Yellow')
 text(comp$scores[1:3,1], comp$scores[1:3,2], labels = data$Name[1:3])
 text(comp$scores[16120:16122,1], comp$scores[16120:16122,2], labels = data$Name[16120:16122], col = "Blue")
 #text(comp$scores[c(234,237),1], comp$scores[c(234,237),2], labels = data$Name[c(234,237)], col = "Blue")
-plot(comp$scores[,1], comp$scores[,2], col = data$Role, main = "Role",
+plot(comp$scores[,1], comp$scores[,2], col = cut(data$Overall, breaks = 3), main = "Overall",
      xlab = "Comp1", ylab = "Comp2")
 points(comp$scores[1:10,1], comp$scores[1:10,2], pch = 8, col = 'Yellow')
 text(comp$scores[1:3,1], comp$scores[1:3,2], labels = data$Name[1:3])
