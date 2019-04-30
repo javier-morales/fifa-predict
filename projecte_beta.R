@@ -192,44 +192,21 @@ p.tr <- predict(mod.lasso, newx = x, s = "lambda.min")
 p.te <- predict(mod.lasso, newx = test.m[,-4], s = "lambda.min")
 
 # R squared gives us an NRMSE of 0.2007968 with the test data
-(NRMSE.train <- sqrt(1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2)))
+(NRMSE.train <- (1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2)))
 
 # R squared gives us an NRMSE of 0.1541901 with the test data
-(NRMSE.test <- sqrt(1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2)))
+(NRMSE.test <- (1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2)))
 
 
 #-----------------
-#-------LM--------
+#-------GLM - Poisson--------
 #-----------------
-try.lm <- lm(Value~Age+Overall+Potential+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
-             + Dribbles + Defending+ Physicality, data= train)
 
-summary(try.lm)
-st <- step(try.lm)
+glm.mod <- glm(Value~Age+Overall+Potential+Wage+International.Reputation+Skill.Moves+Pace+Shooting+Passing
+               + Dribbles + Defending+ Physicality, data = train, family = poisson)
 
-#The model using Step algorithm is:
-st.lm <- lm(Value ~ Age + Overall + Potential + Wage + International.Reputation + 
-  Skill.Moves + Shooting + Passing + Defending, data = train)
-
-summary(st.lm)
-
-p.tr <- predict(st.lm, newx = x)
-p.te <- predict(st.lm,  newx = test.m[,-4])
-
-# R squared gives us an NRMSE of 0.2007968 with the test data
-(NRMSE.train <- sqrt(1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2)))
-
-# R squared gives us an NRMSE of 0.1541901 with the test data
-(NRMSE.test <- sqrt(1 - sum((p.te - mean(test.m[, 4]))^2) / sum((test.m[, 4] - mean(test.m[, 4]))^2)))
-
-#Now let's try a new linear model with LASSO variables with non-zero coefficients.
-
-l.lm <- lm(Value~ Overall + Potential + Wage+ International.Reputation + Skill.Moves + Pace, data = train)
-summary(l.lm)
-#79,29 % with less than the half of the variables.
-
-p.tr <- predict(l.lm, newx = x)
-p.te <- predict(l.lm,  newx = test.m[,-4])
+p.tr <- predict(glm.mod)
+p.te <- predict(glm.mod, newx = test)
 
 # R squared gives us an NRMSE of 0.2007968 with the test data
 (NRMSE.train <- (1 - sum((p.tr - mean(train.m[, 4]))^2) / sum((train.m[, 4] - mean(train.m[, 4]))^2)))
