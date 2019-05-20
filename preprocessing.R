@@ -139,9 +139,9 @@ train.data <- data.2[(bound+1):nrow(data),]
 numerical <- !sapply(data, is.factor)
 data.m <- sapply(data[,numerical], as.numeric)
 
-numerical <- !sapply(train.data, is.factor)
-train.m <- sapply(train.data[,numerical], as.numeric)
+numerical.tr <- !sapply(train.data, is.factor)
+train.m <- sapply(train.data[,numerical.tr], as.numeric)
 
-numerical <- !sapply(test.data, is.factor)
-test.m <- sapply(test.data[,numerical], as.numeric)
+numerical.te <- !sapply(test.data, is.factor)
+test.m <- sapply(test.data[,numerical.te], as.numeric)
 
