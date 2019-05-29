@@ -16,12 +16,12 @@ data <- read.csv("fifa.csv")
 
 #WATCH OUT WITH X...  !!!!
 data <- data %>%
-  select(-one_of("X", "ID", "Photo", "Flag", "Club.Logo",
+  dplyr::select(-one_of("X", "ID", "Photo", "Flag", "Club.Logo",
                  "Real.Face", "Jersey.Number", "Joined", "Release.Clause",
                  "Loaned.From", "Contract.Valid.Until","Body.Type")) %>%
   filter(complete.cases(data)) %>%
   filter(Position != "GK") %>%
-  select(-one_of("GKDiving", "GKHandling", "GKKicking", "GKPositioning", "GKReflexes")) 
+  dplyr::select(-one_of("GKDiving", "GKHandling", "GKKicking", "GKPositioning", "GKReflexes")) 
 
 # Next we change units, parse numbers and separate variables that merged
 
@@ -36,7 +36,7 @@ data <- data %>%
          Weight = parse_number(Weight) * 0.453592,  # lbs to kg
          Height = ft*30.48 + inch*2.54
   ) %>%
-  select(-one_of("ft", "inch")) %>%
+  dplyr::select(-one_of("ft", "inch")) %>%
   mutate_at(vars(LS:RB), parse_number) %>%
   mutate_at(vars(Weak.Foot, Skill.Moves), parse_number) %>%
   mutate_at(vars(WR.Attack, WR.Defense), factor, ordered = TRUE)
@@ -45,6 +45,9 @@ data$Wage <- ifelse(data$M.wage, data$Wage * 1000000, data$Wage * 1000)
 data$Value <- ifelse(data$M.value, data$Value * 1000000, data$Value * 1000)
 data$M.value <- NULL
 data$M.wage <- NULL
+
+data <- data %>%
+  filter(Value != 0)  # Players that only play at national teams (for free)
 
 levels(data$WR.Attack) <- c("Low", "Medium", "High")  # Correct order
 levels(data$WR.Defense) <- c("Low", "Medium", "High")
@@ -79,7 +82,7 @@ data$Defending <- rowMeans(data[, c("Interceptions", "HeadingAccuracy","Marking"
                                     "StandingTackle", "SlidingTackle")])
 data$Physicality <- rowMeans(data[, c("Jumping", "Stamina", "Strength","Aggression")])
 
-data <- select(data, -(Crossing:SlidingTackle)) # We remove them!
+data <- dplyr::select(data, -(Crossing:SlidingTackle)) # We remove them!
 
 # We do the same thing for the position score of the players, the same
 # way we did when making the 'Role' variable.
@@ -91,7 +94,7 @@ data$MID <- rowMeans(data[, c("CDM", "CM", "LCM", "LDM","LM",
 data$DEF <- rowMeans(data[, c("CB", "LB", "LCB","LWB",
                               "RB", "RCB", "RWB")])
 
-data <- select(data, -(LS:RB)) # We remove them!
+data <- dplyr::select(data, -(LS:RB)) # We remove them!
 
 
 #-------------------
@@ -114,6 +117,11 @@ data$ATT <- NULL
 data$MID <- NULL
 data$DEF <- NULL
 
+# We separate some (useless for training models) variables.
+data.players <- data.frame(data$Name, data$Club, data$Nationality)
+data$Name <- NULL
+data$Club <- NULL
+data$Nationality <- NULL
 
 
 
@@ -137,11 +145,17 @@ train.data <- data.2[(bound+1):nrow(data),]
 # -------------------
 
 numerical <- !sapply(data, is.factor)
-data.m <- sapply(data[,numerical], as.numeric)
+data.m <- sapply(data.2[,numerical], as.numeric)
 
 numerical.tr <- !sapply(train.data, is.factor)
 train.m <- sapply(train.data[,numerical.tr], as.numeric)
 
 numerical.te <- !sapply(test.data, is.factor)
 test.m <- sapply(test.data[,numerical.te], as.numeric)
+
+
+data.m.s <- scale(data.m)
+test.s <- data.m.s[1:bound,]
+train.s <- data.m.s[(bound+1):nrow(data),]
+
 

@@ -3,8 +3,6 @@ source('preprocessing.R')
 
 library(e1071)
 
-library(caret)
-
 
 ## Utils 
 
@@ -17,50 +15,37 @@ conf.matrix <- function(mod, data, target) {
 
 ## -- SVM (radial) --
 
-bound <- round(nrow(train.data)/5)
-cv.test <- train.data[1:bound,]
-cv.train <- train.data[(bound+1):nrow(train.data),]
+library(caret)
+library(kernlab)
 
-# CV of cost parameter
-C <- 10^seq(-2, 3)
-acc.C <- rep(NA, length(C))
-for (i in 1:length(C)) {
-  mod.svm <- svm(Role ~ Value+Age+Overall+Pace+Shooting,
-                 data = cv.train,
-                 kernel = "radial", cost = C[i])
-  acc.C[i] <- conf.matrix(mod.svm, cv.test, cv.test$Role)$accuracy
-  cat("Model", i, "done ( cost =", C[i], ")\n")
-}
-plot(1:length(acc.C), acc.C, type="l", xaxt= "n", xlab = "Cost", ylab = "Accuracy")
-axis(1,at=1:length(acc.C),labels=C)
-(best.cost <- C[which.max(acc.C)])
-abline(v = which.max(acc.C), col = "blue", lty = 2)
+trC <- trainControl(method = "repeatedcv", number = 3, repeats = 3, allowParallel = T)
 
+model3x3CV.sigma <- train(train.s, train$Role, method = "svmRadial",
+                    trControl = trC, tuneGrid = expand.grid(.sigma = c(.01, .015, 0.2), .C = 1))
 
-# CV of gamma
-gamma <- 2^seq(-3, 4)
-acc.g <- rep(NA, length(gamma))
-for (i in 1:length(gamma)) {
-  mod.svm <- svm(Role ~ Value+Age+Overall+Pace+Shooting, data = train.data,
-                 kernel = "radial", cost = 1, gamma = gamma[i])
-  acc.g[i] <- conf.matrix(mod.svm, train.data, train.data$Role)$accuracy
-  cat("Model", i, "done ( gamma =", gamma[i], ")\n")
-}
-plot(1:length(acc.g), acc.g, type="l", xaxt= "n", xlab = "Gamma", ylab = "Accuracy")
-axis(1,at=1:length(acc.g),labels=gamma)
-(best.gamma <- gamma[which.max(acc.g)])
-abline(v = which.max(acc.g), col = "blue", lty = 2)
+(bestSigma <- model3x3CV.sigma$bestTune$sigma)
+
+model3x3CV.C <- train(train.s, train$Role, method = "svmRadial",
+                    trControl = trC, tuneGrid = expand.grid(.sigma = bestSigma, .C = 2^seq(-2, 2)))
+
+(bestCost <- model3x3CV.C$bestTune$C)
+
+mod.svmRadial <- model3x3CV.C$finalModel
+
+conf.matrix(mod.svmRadial, train.s, train$Role)
+conf.matrix(mod.svmRadial, test.s, test$Role)
 
 
 
-# Best model SVM (radial)
+# SVM
 
-t <- train.data$Role
-
-svm.mod <- svm(Role~Value+Age+Overall+Pace+Shooting,
-               data = train.data, kernel = "radial",
-               cost = best.cost, gamma = best.gamma)
-
-conf.matrix(svm.mod, test.data, test.data$Role)
+model3x3CV.poly <- train(train.s, train$Role, method = "svmPoly",
+                          trControl = trC, tuneGrid = expand.grid(.degree = 2, 
+                                                                  .scale = 1, 
+                                                                  .C = 0))
 
 
+mod.svmPoly <- model3x3CV.poly$finalModel
+
+conf.matrix(mod.svmRadial, train.s, train$Role)
+conf.matrix(mod.svmRadial, test.s, test$Role)
