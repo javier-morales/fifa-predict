@@ -129,15 +129,15 @@ data$Nationality <- NULL
 # --- RESAMPLING DATA ---
 # -----------------------
 
-set.seed(123)
+set.seed(124)
 # 1. shuffle data
-data.2 <- data[sample(nrow(data)),]
+data.p <- data[sample(nrow(data)),]
 
 # 2. split training and test data (20% test data)
 bound <- floor((nrow(data)/5))
 
-test.data <- data.2[1:bound,]
-train.data <- data.2[(bound+1):nrow(data),]
+test.data <- data.p[1:bound,]
+train.data <- data.p[(bound+1):nrow(data),]
 
 
 # -------------------
@@ -145,7 +145,7 @@ train.data <- data.2[(bound+1):nrow(data),]
 # -------------------
 
 numerical <- !sapply(data, is.factor)
-data.m <- sapply(data.2[,numerical], as.numeric)
+data.m <- sapply(data.p[,numerical], as.numeric)
 
 numerical.tr <- !sapply(train.data, is.factor)
 train.m <- sapply(train.data[,numerical.tr], as.numeric)
