@@ -21,6 +21,9 @@ mod.lasso <- cv.glmnet(x, t, nfolds = 10)
 
 coef(mod.lasso)
 
+#png("lassolambda.png", units = "cm", width = 10, height = 8, res = 300)
+plot(mod.lasso)
+
 p.tr <- (predict(mod.lasso, newx = x, s = "lambda.min"))
 p.te <- (predict(mod.lasso, newx = test.m[,-4], s = "lambda.min"))
 
@@ -38,6 +41,8 @@ set.seed(270217)
 models.ridge <- lm.ridge(Value ~ Overall+Potential+Wage+International.Reputation+
                          Skill.Moves+Dribbles, data = train.data, lambda = seq(0,10,0.1))
 
+
+png("ridgelambda.png", units = "cm", width = 10, height = 8, res = 300)
 plot(seq(0,10,0.1), models.ridge$GCV, main="GCV of Ridge Regression", type="l", 
      xlab=expression(lambda), ylab="GCV")
 
@@ -62,9 +67,15 @@ nrmse(test.data$Value, p.te)
 
 # -- GLM (log link) --
 
+trC <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
+
 set.seed(270217)
-mod.glm <- glm(Value ~ Overall+Potential+Wage+International.Reputation+
-               Skill.Moves+Dribbles, family = gaussian(link = "log"), data = train.data)
+model.10CV.glm <- train(Value ~ Overall+Potential+Wage+International.Reputation+
+                 Skill.Moves+Dribbles, data = train.data, method = "glm",
+                 family = gaussian(link = "log"))
+
+mod.glm <- model.10CV.glm$finalModel
+
 p.tr <- predict(mod.glm, train.data, type = 'response')
 p.te <- predict(mod.glm, test.data, type = 'response')
 
@@ -82,13 +93,16 @@ library(caret) # for cross-validation
 trC <- trainControl(method = "repeatedcv", number = 5, repeats = 3)
 
 set.seed(270217)
-model.5x3CV <- train(Value ~ ., data = train.s, method = 'nnet', linout = T,
+model.5x3CVsize <- train(Value ~ ., data = train.s, method = 'nnet', linout = T,
                        tuneGrid = expand.grid(.size = seq(1, 20, 2), .decay = 0), trControl = trC)
 
-plot(model.5x3CV)
-model.5x3CV$bestTune$size
+plot(model.5x3CVsize)
+nnet.bestSize <- model.5x3CVsize$bestTune$size
 
-mod.nnet <- model.5x3CV$finalModel
+model.5x3CVdecay <- train(Value ~ ., data = train.s, method = 'nnet', linout = T,
+                         tuneGrid = expand.grid(.size = nnet.bestSize, .decay = 10^seq(-2, 2, 0.5)), trControl = trC)
+
+mod.nnet <- model.5x3CVdecay$finalModel
 
 p.tr <- predict(mod.nnet, train.s)
 p.te <- predict(mod.nnet, test.s)
@@ -103,15 +117,25 @@ abline(0,1,col="red")
 # More simple neural network
 
 set.seed(270217)
-model.5x3CV.simple <- train(Value ~ Overall+Potential+Wage+International.Reputation+
+model.5x3CVsize.simple <- train(Value ~ Overall+Potential+Wage+International.Reputation+
                               Skill.Moves+Dribbles, data = train.s, method = 'nnet',
                               linout = T, tuneGrid = expand.grid(.size = seq(1, 20, 2), .decay = 0),
                               trControl = trC)
 
-plot(model.5x3CV.simple)
-model.5x3CV.simple$bestTune$size
+plot(model.5x3CVsize.simple)
 
-mod.nnet.simple <- model.5x3CV.simple$finalModel
+nnet.simple.bestSize <- model.5x3CVsize.simple$bestTune$size
+
+model.5x3CVdecay.simple <- train(Value ~ Overall+Potential+Wage+International.Reputation+
+                                  Skill.Moves+Dribbles, data = train.s, method = 'nnet',
+                                linout = T, tuneGrid = expand.grid(
+                                          .size = nnet.simple.bestSize,
+                                          .decay = 10^seq(-2, 2, 0.5)),
+                                trControl = trC)
+
+plot(model.5x3CVdecay.simple)
+
+mod.nnet.simple <- model.5x3CVdecay.simple$finalModel
 
 p.tr <- predict(mod.nnet.simple, train.s)
 p.te <- predict(mod.nnet.simple, test.s)

@@ -20,11 +20,13 @@ library(kernlab)
 
 trC <- trainControl(method = "repeatedcv", number = 3, repeats = 3, allowParallel = T)
 
+set.seed(270217)
 model3x3CV.sigma <- train(train.s, train.data$Role, method = "svmRadial",
                     trControl = trC, tuneGrid = expand.grid(.sigma = c(.01, .015, 0.2), .C = 1))
 
 (bestSigma <- model3x3CV.sigma$bestTune$sigma)
 
+set.seed(270217)
 model3x3CV.C <- train(train.s, train.data$Role, method = "svmRadial",
                     trControl = trC, tuneGrid = expand.grid(.sigma = bestSigma, .C = 2^seq(-2, 2)))
 
@@ -39,6 +41,7 @@ conf.matrix(mod.svmRadial, test.s, test.data$Role)
 
 # -- SVM (poly) --
 
+set.seed(270217)
 model3x3CV.poly <- train(train.s, train.data$Role, method = "svmPoly",
                           trControl = trC, tuneGrid = expand.grid(.degree = 2, 
                                                                   .scale = 1, 
@@ -54,6 +57,7 @@ conf.matrix(mod.svmRadial, test.s, test.data$Role)
 
 # -- kNN --
 
+set.seed(270217)
 mod.knn <- train(train.data, train.data$Role, method = "knn",
                  trControl = trC, tuneGrid = expand.grid(.k = 1:8))
 
