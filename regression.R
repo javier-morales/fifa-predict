@@ -42,7 +42,7 @@ models.ridge <- lm.ridge(Value ~ Overall+Potential+Wage+International.Reputation
                          Skill.Moves+Dribbles, data = train.data, lambda = seq(0,10,0.1))
 
 
-png("ridgelambda.png", units = "cm", width = 10, height = 8, res = 300)
+#png("ridgelambda.png", units = "cm", width = 10, height = 8, res = 300)
 plot(seq(0,10,0.1), models.ridge$GCV, main="GCV of Ridge Regression", type="l", 
      xlab=expression(lambda), ylab="GCV")
 
@@ -102,6 +102,7 @@ nnet.bestSize <- model.5x3CVsize$bestTune$size
 model.5x3CVdecay <- train(Value ~ ., data = train.s, method = 'nnet', linout = T,
                          tuneGrid = expand.grid(.size = nnet.bestSize, .decay = 10^seq(-2, 2, 0.5)), trControl = trC)
 
+plot(model.5x3CVdecay)
 mod.nnet <- model.5x3CVdecay$finalModel
 
 p.tr <- predict(mod.nnet, train.s)
