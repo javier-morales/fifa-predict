@@ -1,8 +1,8 @@
 source("preprocessing.R")
 
 
+# Utils
 
-# NRMSE (the lower the better)
 nrmse <- function(obs, pred) {
   return(sqrt(sum((obs - pred)^2)/(length(obs)-1))/sd(obs))
 }
@@ -20,8 +20,6 @@ set.seed(270217)
 mod.lasso <- cv.glmnet(x, t, nfolds = 10)
 
 coef(mod.lasso)
-
-#png("lassolambda.png", units = "cm", width = 10, height = 8, res = 300)
 plot(mod.lasso)
 
 p.tr <- (predict(mod.lasso, newx = x, s = "lambda.min"))
@@ -42,7 +40,6 @@ models.ridge <- lm.ridge(Value ~ Overall+Potential+Wage+International.Reputation
                          Skill.Moves+Dribbles, data = train.data, lambda = seq(0,10,0.1))
 
 
-#png("ridgelambda.png", units = "cm", width = 10, height = 8, res = 300)
 plot(seq(0,10,0.1), models.ridge$GCV, main="GCV of Ridge Regression", type="l", 
      xlab=expression(lambda), ylab="GCV")
 
@@ -52,6 +49,7 @@ abline(v=lambda.ridge,lty=2)
 mod.ridge <- lm.ridge(Value ~ Overall+Potential+Wage+International.Reputation+
                       Skill.Moves+Dribbles, data = train.data, lambda = lambda.ridge)
 
+# Sadly predict is not implemented for ridge...
 predict.ridge <- function(model, data) {
   X <- scale(as.matrix(data[,names(model$coef)]))
   w <- model$coef
@@ -66,6 +64,8 @@ nrmse(test.data$Value, p.te)
 
 
 # -- GLM (log link) --
+
+library(caret) # for cross-validation
 
 trC <- trainControl(method = "repeatedcv", number = 10, repeats = 1)
 
@@ -87,8 +87,6 @@ plot(test.data$Value, p.te)
 abline(0, 1, col = "red")
 
 # -- Neural Network --
-
-library(caret) # for cross-validation
 
 trC <- trainControl(method = "repeatedcv", number = 5, repeats = 3)
 

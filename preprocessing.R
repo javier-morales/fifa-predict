@@ -145,7 +145,7 @@ train.data <- data.p[(bound+1):nrow(data),]
 # -------------------
 
 numerical <- !sapply(data, is.factor)
-data.m <- sapply(data.p[,numerical], as.numeric)
+data.m <- sapply(data[,numerical], as.numeric)
 
 numerical.tr <- !sapply(train.data, is.factor)
 train.m <- sapply(train.data[,numerical.tr], as.numeric)
@@ -155,7 +155,9 @@ test.m <- sapply(test.data[,numerical.te], as.numeric)
 
 
 data.m.s <- scale(data.m)
-test.s <- data.m.s[1:bound,]
-train.s <- data.m.s[(bound+1):nrow(data),]
+set.seed(124)
+data.m.s.p <- data.m.s[sample(nrow(data)),]
+test.s <- data.m.s.p[1:bound,]
+train.s <- data.m.s.p[(bound+1):nrow(data),]
 
 
